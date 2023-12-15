@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 
-export type GridCell = {
+export interface GridCell {
   x: number;
   y: number;
-};
+}
 
 type Props = {
   cellSize: number;
@@ -119,8 +119,8 @@ function Canvas({
     );
 
     //Draw only cells that are visible
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
+    for (let x = startX; x < endX; x++) {
+      for (let y = startY; y < endY; y++) {
         const cellX = x * cellSize + offsetX;
         const cellY = y * cellSize + offsetY;
 

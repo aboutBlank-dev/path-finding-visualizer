@@ -1,10 +1,22 @@
-interface Cell {
+export enum CellType {
+  StartPosition,
+  EndPosition,
+  Obstacle,
+  Empty,
+  Path,
+}
+
+export interface Cell extends Position {
+  type: CellType;
+}
+
+export interface Position {
   x: number;
   y: number;
 }
 
-export function getNeighbors(cell: Cell, grid: Cell[][]): Cell[] {
-  const neighbors: Cell[] = [];
+export function getNeighbors(cell: Position, grid: Position[][]): Position[] {
+  const neighbors: Position[] = [];
 
   const dirs = [
     [0, 1], //up
@@ -26,7 +38,7 @@ export function getNeighbors(cell: Cell, grid: Cell[][]): Cell[] {
   return neighbors;
 }
 
-export function getDistance(cellA: Cell, cellB: Cell): number {
+export function getDistance(cellA: Position, cellB: Position): number {
   const dx = Math.abs(cellA.x - cellB.x);
   const dy = Math.abs(cellA.y - cellB.y);
 

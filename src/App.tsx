@@ -1,26 +1,14 @@
 import { useEffect, useState } from "react";
 import GridCanvas, { GridCell } from "./components/GridCanvas";
 import { aStar } from "./utils/path-finding-algorithms/aStar";
-
-enum NodeType {
-  StartPosition,
-  EndPosition,
-  Obstacle,
-  Empty,
-  Path,
-}
-
-type NodeCell = {
-  x: number;
-  y: number;
-  type: NodeType;
-};
+import { Cell, CellType } from "./utils/cellUtils";
+import { generateMaze } from "./utils/mazeUtils";
 
 function App() {
-  const [currentNodeType, setCurrentNodeType] = useState<NodeType>(
-    NodeType.Empty
+  const [currentCellType, setCurrentCellType] = useState<CellType>(
+    CellType.Empty
   );
-  const [cells, setCells] = useState<NodeCell[][]>([]);
+  const [cells, setCells] = useState<Cell[][]>([]);
   const [cellSize, setCellSize] = useState<number>(50);
   const [startPosition, setStartPosition] = useState<GridCell | null>(null);
   const [endPosition, setEndPosition] = useState<GridCell | null>(null);
@@ -46,17 +34,17 @@ function App() {
     return true;
   };
 
-  const getColorForMode = (mode: NodeType) => {
+  const getColorForMode = (mode: CellType) => {
     switch (mode) {
-      case NodeType.Empty:
+      case CellType.Empty:
         return "white";
-      case NodeType.StartPosition:
+      case CellType.StartPosition:
         return "green";
-      case NodeType.EndPosition:
+      case CellType.EndPosition:
         return "blue";
-      case NodeType.Obstacle:
-        return "red";
-      case NodeType.Path:
+      case CellType.Obstacle:
+        return "black";
+      case CellType.Path:
         return "yellow";
     }
   };
@@ -68,35 +56,36 @@ function App() {
       return;
     }
 
-    switch (currentNodeType) {
-      case NodeType.StartPosition:
+    switch (currentCellType) {
+      case CellType.StartPosition:
         if (startPosition) {
           const oldCell = cells[startPosition.x]?.[startPosition.y];
-          if (oldCell) oldCell.type = NodeType.Empty;
+          if (oldCell) oldCell.type = CellType.Empty;
         }
-        cell.type = NodeType.StartPosition;
+        cell.type = CellType.StartPosition;
         setStartPosition(cell);
         break;
 
-      case NodeType.EndPosition:
+      case CellType.EndPosition:
         if (endPosition) {
           const oldCell = cells[endPosition.x]?.[endPosition.y];
-          if (oldCell) oldCell.type = NodeType.Empty;
+          if (oldCell) oldCell.type = CellType.Empty;
         }
-        cell.type = NodeType.EndPosition;
+        cell.type = CellType.EndPosition;
         setEndPosition(cell);
         break;
 
       default:
         if (
-          cell.type === NodeType.StartPosition ||
-          cell.type === NodeType.EndPosition
+          cell.type === CellType.StartPosition ||
+          cell.type === CellType.EndPosition
         )
           break;
-        cell.type = currentNodeType;
+        cell.type = currentCellType;
         break;
     }
-    setCells([...cells]);
+
+    refreshPath();
   };
 
   const onVisibleGridIndexesChanged = (
@@ -116,13 +105,23 @@ function App() {
       setEndPosition(null);
   };
 
+  const refreshPath = () => {
+    setAStarPath();
+    setCells([...cells]);
+  };
+
+  const refreshMaze = () => {
+    const maze = generateMaze(cells);
+    setCells(maze);
+  };
+
   const setAStarPath = () => {
     //set all old path nodes to empty
     for (let x = 0; x < cells.length; x++) {
       for (let y = 0; y < cells[x].length; y++) {
         const cell = cells[x][y];
-        if (cell.type === NodeType.Path) {
-          cell.type = NodeType.Empty;
+        if (cell.type === CellType.Path) {
+          cell.type = CellType.Empty;
         }
       }
     }
@@ -136,15 +135,11 @@ function App() {
     for (let i = 1; i < path.length - 1; i++) {
       const node = path[i];
       const cell = cells[node.x]?.[node.y];
-      cell.type = NodeType.Path;
+      cell.type = CellType.Path;
     }
-
-    setCells([...cells]);
   };
 
-  useEffect(() => {
-    setAStarPath();
-  }, [startPosition, endPosition]);
+  setAStarPath();
 
   return (
     <div className='flex flex-col h-screen w-screen'>
@@ -161,25 +156,25 @@ function App() {
       <div className='flex flex-row space-x-8 w-full p-4 bg-slate-400'>
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => setCurrentNodeType(NodeType.StartPosition)}
+          onClick={() => setCurrentCellType(CellType.StartPosition)}
         >
           Start Node
         </button>
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => setCurrentNodeType(NodeType.EndPosition)}
+          onClick={() => setCurrentCellType(CellType.EndPosition)}
         >
           End Node
         </button>
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => setCurrentNodeType(NodeType.Obstacle)}
+          onClick={() => setCurrentCellType(CellType.Obstacle)}
         >
           Obstacle
         </button>
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => setCurrentNodeType(NodeType.Empty)}
+          onClick={() => setCurrentCellType(CellType.Empty)}
         >
           Empty
         </button>
@@ -201,9 +196,15 @@ function App() {
         />
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => setAStarPath()}
+          onClick={() => refreshPath()}
         >
           Get A* Path
+        </button>
+        <button
+          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          onClick={() => refreshMaze()}
+        >
+          Generate Maze
         </button>
       </div>
     </div>
@@ -212,22 +213,22 @@ function App() {
 
 export default App;
 
-function makeEmptyGrid(width: number, height: number): NodeCell[][] {
-  const cells: NodeCell[][] = [];
+function makeEmptyGrid(width: number, height: number): Cell[][] {
+  const cells: Cell[][] = [];
 
   for (let x = 0; x < width; x++) {
     cells[x] = [];
 
     for (let y = 0; y < height; y++) {
-      cells[x][y] = { x, y, type: NodeType.Empty };
+      cells[x][y] = { x, y, type: CellType.Empty };
     }
   }
 
   return cells;
 }
 
-function changeGridSize(cells: NodeCell[][], width: number, height: number) {
-  const newCells: NodeCell[][] = [];
+function changeGridSize(cells: Cell[][], width: number, height: number) {
+  const newCells: Cell[][] = [];
 
   for (let x = 0; x < width; x++) {
     newCells[x] = [];
@@ -238,7 +239,7 @@ function changeGridSize(cells: NodeCell[][], width: number, height: number) {
       if (cell) {
         newCells[x][y] = cell;
       } else {
-        newCells[x][y] = { x, y, type: NodeType.Empty };
+        newCells[x][y] = { x, y, type: CellType.Empty };
       }
     }
   }

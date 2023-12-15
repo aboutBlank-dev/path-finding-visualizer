@@ -1,9 +1,10 @@
-import { getDistance, getNeighbors } from "../cellUtils";
-
-interface Cell {
-  x: number;
-  y: number;
-}
+import {
+  Cell,
+  CellType,
+  Position,
+  getDistance,
+  getNeighbors,
+} from "../cellUtils";
 
 class AStarNode {
   constructor(
@@ -16,10 +17,14 @@ class AStarNode {
   ) {}
 }
 
-export function aStar(start: Cell, end: Cell, grid: Cell[][]): Cell[] {
+export function aStar(
+  start: Position,
+  end: Position,
+  grid: Cell[][]
+): Position[] {
   const openSet: AStarNode[] = [];
-  const closedSet: Cell[] = [];
-  const path = [];
+  const closedSet: Position[] = [];
+  const path: Position[] = [];
 
   const startNode: AStarNode = new AStarNode(start.x, start.y);
   const endNode: AStarNode = new AStarNode(end.x, end.y);
@@ -39,9 +44,9 @@ export function aStar(start: Cell, end: Cell, grid: Cell[][]): Cell[] {
 
     if (currNode.x === endNode.x && currNode.y === endNode.y) {
       let temp = { x: currNode.x, y: currNode.y, parent: currNode.parent };
-      path.push(temp);
+      path.push({ x: temp.x, y: temp.y });
       while (temp.parent) {
-        path.push(temp.parent);
+        path.push({ x: temp.parent.x, y: temp.parent.y });
         temp = temp.parent;
       }
 
@@ -59,6 +64,11 @@ export function aStar(start: Cell, end: Cell, grid: Cell[][]): Cell[] {
         closedSet.some((node) => node.x === neighbor.x && node.y === neighbor.y)
       )
         continue;
+
+      if (grid[neighbor.x][neighbor.y].type === CellType.Obstacle) {
+        closedSet.push({ x: neighbor.x, y: neighbor.y });
+        continue;
+      }
 
       const gScore = currNode.g + getDistance(neighbor, currNode);
       const hScore = getDistance(neighbor, endNode);
