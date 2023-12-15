@@ -1,4 +1,4 @@
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 export type GridCell = {
   x: number;
@@ -7,6 +7,7 @@ export type GridCell = {
 
 type Props = {
   cellSize: number;
+  draggable: boolean;
   onCellClicked?: (x: number, y: number) => void;
   onVisibleGridIndexesChanged?: (
     startX: number,
@@ -14,15 +15,22 @@ type Props = {
     endX: number,
     endY: number
   ) => void;
-  setCellStyle?: (cell: GridCell, ctx: CanvasRenderingContext2D) => void;
+  drawCell?: (
+    cell: GridCell,
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    cellSize: number
+  ) => boolean;
 };
 
 //also allow the parent to pass in the html id of the canvas
 function Canvas({
   cellSize,
+  draggable,
   onCellClicked,
   onVisibleGridIndexesChanged,
-  setCellStyle,
+  drawCell,
 }: Props) {
   const canvasContainerRef = useRef<HTMLDivElement>(null);
   const [canvasContainerDimensions, setCanvasContainerDimensions] = useState({
@@ -36,6 +44,7 @@ function Canvas({
   const mouseMoved = useRef(false);
   const startMousePosition = useRef({ x: 0, y: 0 });
   const canvasOffset = useRef({ x: 0, y: 0 });
+  const minDragDistance = 5;
 
   // Set canvas container dimensions on mount
   useEffect(() => {
@@ -45,18 +54,17 @@ function Canvas({
     });
   }, [canvasContainerRef]);
 
+  // Set canvas container dimensions on resize and draw grid
   useEffect(() => {
-    drawGrid();
-  }, [canvasRef]);
-
-  // Set canvas container dimensions on resize
-  useEffect(() => {
+    //This is called after the first render
     const updateCanvasContainerDimensions = () => {
       setCanvasContainerDimensions({
         width: canvasContainerRef.current?.clientWidth || 0,
         height: canvasContainerRef.current?.clientHeight || 0,
       });
     };
+
+    drawGrid();
 
     window.addEventListener("resize", updateCanvasContainerDimensions);
 
@@ -71,25 +79,25 @@ function Canvas({
 
     let startX = Math.floor(-offsetX / cellSize);
     let startY = Math.floor(-offsetY / cellSize);
-    startX = startX === -0 ? 0 : startX;
-    startY = startY === -0 ? 0 : startY;
+    startX = startX === 0 ? 0 : startX; //prevent -0
+    startY = startY === 0 ? 0 : startY; //prevent -0
 
-    const endX = Math.ceil(
+    const endX = Math.floor(
       (canvasContainerDimensions.width - offsetX) / cellSize
     );
-    const endY = Math.ceil(
+    const endY = Math.floor(
       (canvasContainerDimensions.height - offsetY) / cellSize
     );
 
     if (onVisibleGridIndexesChanged)
-      onVisibleGridIndexesChanged(startX, startY, endX, endY);
+      onVisibleGridIndexesChanged(startX, startY, endX - 1, endY - 1);
   }, [canvasContainerDimensions, cellSize, canvasOffset.current]);
 
   const drawGrid = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
 
-    if (!canvas || !ctx) return;
+    if (!canvas || !ctx || !canvasContainerDimensions) return;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -100,25 +108,29 @@ function Canvas({
     //Find all the hypothetical cells that are visible based on the offset
     let startX = Math.floor(-offsetX / cellSize);
     let startY = Math.floor(-offsetY / cellSize);
-    startX = startX === -0 ? 0 : startX;
-    startY = startY === -0 ? 0 : startY;
+    startX = startX === 0 ? 0 : startX; //prevent -0
+    startY = startY === 0 ? 0 : startY; //prevent -0
 
-    const endX = Math.ceil(
+    const endX = Math.floor(
       (canvasContainerDimensions.width - offsetX) / cellSize
     );
-    const endY = Math.ceil(
+    const endY = Math.floor(
       (canvasContainerDimensions.height - offsetY) / cellSize
     );
 
-    //Draw the cells that are visible
+    //Draw only cells that are visible
     for (let y = startY; y < endY; y++) {
       for (let x = startX; x < endX; x++) {
         const cellX = x * cellSize + offsetX;
         const cellY = y * cellSize + offsetY;
 
-        if (setCellStyle) {
-          setCellStyle({ x, y }, ctx);
-          ctx.fillRect(cellX, cellY, cellSize, cellSize);
+        if (drawCell) {
+          if (drawCell({ x, y }, ctx, cellX, cellY, cellSize)) {
+            continue;
+          } else {
+            ctx.fillStyle = "white";
+            ctx.fillRect(cellX, cellY, cellSize, cellSize);
+          }
         }
       }
     }
@@ -165,8 +177,8 @@ function Canvas({
     //Only check the cells that are visible
     let startX = Math.floor(-offsetX / cellSize);
     let startY = Math.floor(-offsetY / cellSize);
-    startX = startX === -0 ? 0 : startX;
-    startY = startY === -0 ? 0 : startY;
+    startX = startX === 0 ? 0 : startX;
+    startY = startY === 0 ? 0 : startY;
 
     const endX = Math.ceil(
       (canvasContainerDimensions.width - offsetX) / cellSize
@@ -191,6 +203,8 @@ function Canvas({
   };
 
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggable) return;
+
     // tell the browser we're handling this event
     e.preventDefault();
     e.stopPropagation();
@@ -204,6 +218,8 @@ function Canvas({
   };
 
   const handleDragStop = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!draggable) return;
+
     e.preventDefault();
     e.stopPropagation();
 
@@ -224,12 +240,12 @@ function Canvas({
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    // only do this code if the mouse is being dragged
+    if (!draggable) return;
+
+    // only do this code if the mouse is down
     if (!isMouseDown.current) {
       return;
     }
-
-    mouseMoved.current = true;
 
     // tell the browser we're handling this event
     e.preventDefault();
@@ -245,6 +261,15 @@ function Canvas({
       x: mouseX - startMousePosition.current.x,
       y: mouseY - startMousePosition.current.y,
     };
+
+    //prevent tiny accidental drags when the mouse is clicked
+    if (
+      Math.abs(change.x) < minDragDistance &&
+      Math.abs(change.y) < minDragDistance
+    )
+      return;
+
+    mouseMoved.current = true;
 
     // reset the vars for next mousemove
     startMousePosition.current = {
@@ -263,7 +288,6 @@ function Canvas({
   };
 
   drawGrid();
-  console.log("canvas render");
   const finalWidth =
     Math.floor(canvasContainerDimensions.width / cellSize) * cellSize;
   const finalHeight =
