@@ -23,7 +23,7 @@ function App() {
     const cell = cells[gridCell.x]?.[gridCell.y];
 
     if (cell) {
-      ctx.fillStyle = getColorForMode(cell.type);
+      ctx.fillStyle = getStyleForCell(cell.type);
     } else {
       ctx.fillStyle = "white";
     }
@@ -34,8 +34,8 @@ function App() {
     return true;
   };
 
-  const getColorForMode = (mode: CellType) => {
-    switch (mode) {
+  const getStyleForCell = (cellType: CellType) => {
+    switch (cellType) {
       case CellType.Empty:
         return "white";
       case CellType.StartPosition:
@@ -58,6 +58,8 @@ function App() {
 
     switch (currentCellType) {
       case CellType.StartPosition:
+        if (cell.type !== CellType.Empty && cell.type !== CellType.Path) break; //Can only place on empty and path cells
+
         if (startPosition) {
           const oldCell = cells[startPosition.x]?.[startPosition.y];
           if (oldCell) oldCell.type = CellType.Empty;
@@ -67,6 +69,8 @@ function App() {
         break;
 
       case CellType.EndPosition:
+        if (cell.type !== CellType.Empty && cell.type !== CellType.Path) break; //Can only place on empty and path cells
+
         if (endPosition) {
           const oldCell = cells[endPosition.x]?.[endPosition.y];
           if (oldCell) oldCell.type = CellType.Empty;
@@ -112,6 +116,8 @@ function App() {
 
   const refreshMaze = () => {
     const maze = generateMaze(cells);
+    setStartPosition(null);
+    setEndPosition(null);
     setCells(maze);
   };
 
@@ -140,7 +146,6 @@ function App() {
   };
 
   setAStarPath();
-
   return (
     <div className='flex flex-col h-screen w-screen'>
       <div className='grow'>
