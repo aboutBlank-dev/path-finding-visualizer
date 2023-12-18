@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import GridCanvas, { GridCell } from "./components/GridCanvas";
 import { aStar } from "./utils/path-finding-algorithms/aStar";
 import { Cell, CellType } from "./utils/cellUtils";
@@ -24,11 +24,8 @@ function App() {
 
     if (cell) {
       ctx.fillStyle = getStyleForCell(cell.type);
-    } else {
-      ctx.fillStyle = "white";
+      ctx.fillRect(xPos, yPos, cellSize, cellSize);
     }
-
-    ctx.fillRect(xPos, yPos, cellSize, cellSize);
 
     //tell the grid canvas that we handled drawing the cell
     return true;
@@ -115,9 +112,11 @@ function App() {
   };
 
   const refreshMaze = () => {
-    const maze = generateMaze(cells);
-    setStartPosition(null);
-    setEndPosition(null);
+    const [maze, start, end] = generateMaze(cells);
+    setStartPosition(start);
+    setEndPosition(end);
+    maze[start.x][start.y].type = CellType.StartPosition;
+    maze[end.x][end.y].type = CellType.EndPosition;
     setCells(maze);
   };
 
