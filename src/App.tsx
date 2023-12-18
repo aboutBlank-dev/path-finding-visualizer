@@ -121,6 +121,12 @@ function App() {
     setCells(maze);
   };
 
+  const clearGrid = () => {
+    setStartPosition(null);
+    setEndPosition(null);
+    setCells(makeEmptyGrid(cells.length, cells[0].length));
+  };
+
   const setAStarPath = () => {
     //set all old path nodes to empty
     for (let x = 0; x < cells.length; x++) {
@@ -138,10 +144,14 @@ function App() {
     if (!startNode || !endNode) return;
 
     const path = aStar(startNode, endNode, cells);
-    for (let i = 1; i < path.length - 1; i++) {
+    for (let i = 0; i < path.length; i++) {
       const node = path[i];
       const cell = cells[node.x]?.[node.y];
-      cell.type = CellType.Path;
+      if (
+        cell.type !== CellType.StartPosition &&
+        cell.type !== CellType.EndPosition
+      )
+        cell.type = CellType.Path;
     }
   };
 
@@ -183,6 +193,13 @@ function App() {
         >
           Empty
         </button>
+        <button
+          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          onClick={() => clearGrid()}
+        >
+          Clear Grid
+        </button>
+
         <label
           htmlFor='grid-size-range'
           className='text-white font-bold py-2 px-4'
