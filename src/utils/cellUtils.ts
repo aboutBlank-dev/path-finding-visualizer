@@ -4,6 +4,7 @@ export enum CellType {
   Obstacle,
   Empty,
   Path,
+  Explored,
 }
 
 export interface Cell extends Position {

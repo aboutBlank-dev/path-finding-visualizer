@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import GridCanvas, { GridCell } from "./components/GridCanvas";
 import { aStar } from "./utils/path-finding-algorithms/aStar";
 import { Cell, CellType } from "./utils/cellUtils";
 import { generateMaze } from "./utils/mazeUtils";
 
+export default App;
 function App() {
   const [currentCellType, setCurrentCellType] = useState<CellType>(
     CellType.Empty
@@ -12,6 +13,20 @@ function App() {
   const [cellSize, setCellSize] = useState<number>(50);
   const [startPosition, setStartPosition] = useState<GridCell | null>(null);
   const [endPosition, setEndPosition] = useState<GridCell | null>(null);
+  const [isVisualizing, setIsVisualizing] = useState<boolean>(false);
+  const [visualizationSpeed, setVisualizationSpeed] = useState<number>(1);
+  const [iterationStep, setIterationStep] = useState<number>(0);
+
+  useEffect(() => {
+    if (!isVisualizing) return;
+
+    const simulate = () => {
+      setIterationStep((prev) => prev + 1);
+      visualize();
+    };
+    const interval = setInterval(simulate, visualizationSpeed);
+    return () => clearInterval(interval);
+  });
 
   const drawCell = (
     gridCell: GridCell,
@@ -43,6 +58,10 @@ function App() {
         return "black";
       case CellType.Path:
         return "yellow";
+      case CellType.Explored:
+        return "#ff00ff";
+      default:
+        return "white";
     }
   };
 
@@ -55,7 +74,12 @@ function App() {
 
     switch (currentCellType) {
       case CellType.StartPosition:
-        if (cell.type !== CellType.Empty && cell.type !== CellType.Path) break; //Can only place on empty and path cells
+        if (
+          cell.type === CellType.StartPosition ||
+          cell.type === CellType.EndPosition ||
+          cell.type === CellType.Obstacle
+        )
+          break; //Can only place on empty and path cells
 
         if (startPosition) {
           const oldCell = cells[startPosition.x]?.[startPosition.y];
@@ -66,7 +90,12 @@ function App() {
         break;
 
       case CellType.EndPosition:
-        if (cell.type !== CellType.Empty && cell.type !== CellType.Path) break; //Can only place on empty and path cells
+        if (
+          cell.type === CellType.StartPosition ||
+          cell.type === CellType.EndPosition ||
+          cell.type === CellType.Obstacle
+        )
+          break;
 
         if (endPosition) {
           const oldCell = cells[endPosition.x]?.[endPosition.y];
@@ -85,8 +114,8 @@ function App() {
         cell.type = currentCellType;
         break;
     }
-
-    refreshPath();
+    setCells([...cells]);
+    resetVisualization();
   };
 
   const onVisibleGridIndexesChanged = (
@@ -107,7 +136,7 @@ function App() {
   };
 
   const refreshPath = () => {
-    setAStarPath();
+    visualize();
     setCells([...cells]);
   };
 
@@ -118,6 +147,8 @@ function App() {
     maze[start.x][start.y].type = CellType.StartPosition;
     maze[end.x][end.y].type = CellType.EndPosition;
     setCells(maze);
+    setIterationStep(0);
+    setIsVisualizing(false);
   };
 
   const clearGrid = () => {
@@ -126,7 +157,7 @@ function App() {
     setCells(makeEmptyGrid(cells.length, cells[0].length));
   };
 
-  const setAStarPath = () => {
+  const visualize = () => {
     //set all old path nodes to empty
     for (let x = 0; x < cells.length; x++) {
       for (let y = 0; y < cells[x].length; y++) {
@@ -142,19 +173,70 @@ function App() {
     const endNode = cells[endPosition.x]?.[endPosition.y];
     if (!startNode || !endNode) return;
 
-    const path = aStar(startNode, endNode, cells);
-    for (let i = 0; i < path.length; i++) {
-      const node = path[i];
-      const cell = cells[node.x]?.[node.y];
-      if (
-        cell.type !== CellType.StartPosition &&
-        cell.type !== CellType.EndPosition
-      )
-        cell.type = CellType.Path;
+    const [path, explored] = aStar(startNode, endNode, cells);
+    if (explored.length <= 0) {
+      setIsVisualizing(false);
+      return;
+    }
+
+    //animate the explored nodes
+    if (iterationStep < explored.length) {
+      const index = Math.min(iterationStep, explored.length - 1);
+      const exploredNodes = explored[index];
+
+      for (let i = 0; i < exploredNodes.length; i++) {
+        const node = exploredNodes[i];
+        const cell = cells[node.x]?.[node.y];
+        if (
+          cell.type !== CellType.StartPosition &&
+          cell.type !== CellType.EndPosition &&
+          cell.type !== CellType.Obstacle
+        )
+          cell.type = CellType.Explored;
+      }
+    } else {
+      //animate the final path
+      const maxIndex = Math.min(
+        iterationStep - explored.length,
+        path.length - 1
+      );
+      for (let i = 0; i < maxIndex; i++) {
+        const node = path[i];
+        const cell = cells[node.x]?.[node.y];
+        if (
+          cell.type !== CellType.StartPosition &&
+          cell.type !== CellType.EndPosition
+        )
+          cell.type = CellType.Path;
+      }
     }
   };
 
-  setAStarPath();
+  const startVisualization = () => {
+    setIsVisualizing(true);
+    setIterationStep(0);
+  };
+
+  const stopVisualization = () => {
+    setIsVisualizing(false);
+  };
+
+  const resetVisualization = () => {
+    setIsVisualizing(false);
+    setIterationStep(0);
+
+    //Stop showing all Paths and Explored Cells
+    for (let x = 0; x < cells.length; x++) {
+      for (let y = 0; y < cells[x].length; y++) {
+        const cell = cells[x][y];
+        if (cell.type === CellType.Path || cell.type === CellType.Explored) {
+          cell.type = CellType.Empty;
+        }
+      }
+    }
+    setCells([...cells]);
+  };
+
   return (
     <div className='flex flex-col h-screen w-screen'>
       <div className='grow'>
@@ -215,24 +297,38 @@ function App() {
           step='1'
           className='rotate-180 w-16 h-2 my-auto bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
         />
-        <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => refreshPath()}
+        <label
+          htmlFor='grid-size-range'
+          className='text-white font-bold py-2 px-4'
         >
-          Get A* Path
-        </button>
+          Simulation Speed
+        </label>
+        <input
+          id='grid-size-range'
+          type='range'
+          min='25'
+          max='100'
+          value={visualizationSpeed}
+          onChange={(e) => setVisualizationSpeed(Number(e.target.value))}
+          step='1'
+          className='rotate-180 w-16 h-2 my-auto bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
+        />
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
           onClick={() => refreshMaze()}
         >
           Generate Maze
         </button>
+        <button
+          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          onClick={() => startVisualization()}
+        >
+          Visualize
+        </button>
       </div>
     </div>
   );
 }
-
-export default App;
 
 function makeEmptyGrid(width: number, height: number): Cell[][] {
   const cells: Cell[][] = [];
