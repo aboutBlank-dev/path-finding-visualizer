@@ -1,4 +1,10 @@
-import { Cell, CellType, getDistance, getNeighbors } from "../cellUtils";
+import {
+  Cell,
+  CellType,
+  Position,
+  getDistance,
+  getNeighbors,
+} from "../cellUtils";
 
 class DijkstraNode {
   constructor(
@@ -14,9 +20,10 @@ export function dijkstra(
   start: Cell,
   end: Cell,
   cells: Cell[][]
-): [Cell[], Cell[][]] {
+): [Position[], Position[][]] {
   const startNode: DijkstraNode = new DijkstraNode(start.x, start.y, 0);
   const queue: DijkstraNode[] = [];
+  const totalVisited: Position[][] = [];
 
   for (let x = 0; x < cells.length; x++) {
     for (let y = 0; y < cells[x].length; y++) {
@@ -29,6 +36,8 @@ export function dijkstra(
   }
 
   while (queue.length > 0) {
+    const visited: Position[] = [];
+
     let lowstDistanceIndex = 0;
     for (let i = 0; i < queue.length; i++) {
       if (queue[i].distance < queue[lowstDistanceIndex].distance) {
@@ -45,7 +54,7 @@ export function dijkstra(
         path.push(cells[temp.parent.x][temp.parent.y]);
         temp = temp.parent;
       }
-      return [path.reverse(), []];
+      return [path.reverse(), totalVisited];
     }
 
     queue.splice(lowstDistanceIndex, 1);
@@ -62,11 +71,13 @@ export function dijkstra(
       }
       if (v.isWall) continue;
 
+      visited.push(v);
       if (alt < v.distance) {
         v.distance = alt;
         v.parent = u;
       }
     }
+    totalVisited.push([...visited]);
   }
   return [[], []];
 }
