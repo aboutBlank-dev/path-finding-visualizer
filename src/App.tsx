@@ -115,7 +115,7 @@ function App() {
         break;
     }
     setCells([...cells]);
-    resetVisualization();
+    stopVisualization();
   };
 
   const onVisibleGridIndexesChanged = (
@@ -219,12 +219,11 @@ function App() {
 
   const stopVisualization = () => {
     setIsVisualizing(false);
+    setIterationStep(0);
+    resetVisualization();
   };
 
   const resetVisualization = () => {
-    setIsVisualizing(false);
-    setIterationStep(0);
-
     //Stop showing all Paths and Explored Cells
     for (let x = 0; x < cells.length; x++) {
       for (let y = 0; y < cells[x].length; y++) {
@@ -321,7 +320,9 @@ function App() {
         </button>
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => startVisualization()}
+          onClick={() =>
+            isVisualizing ? stopVisualization() : startVisualization()
+          }
         >
           Visualize
         </button>
