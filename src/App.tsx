@@ -3,6 +3,13 @@ import GridCanvas, { GridCell } from "./components/GridCanvas";
 import { aStar } from "./utils/path-finding-algorithms/aStar";
 import { Cell, CellType, Position } from "./utils/cellUtils";
 import { generateMaze } from "./utils/mazeUtils";
+import { dijkstra } from "./utils/path-finding-algorithms/dijkstra";
+import Dropdown from "./components/Dropdown";
+
+enum PathFindingAlgorithms {
+  AStar = "A*",
+  Dijkstra = "Dijkstra",
+}
 
 export default App;
 function App() {
@@ -14,16 +21,30 @@ function App() {
   const [startPosition, setStartPosition] = useState<GridCell | null>(null);
   const [endPosition, setEndPosition] = useState<GridCell | null>(null);
   const [isVisualizing, setIsVisualizing] = useState<boolean>(false);
-  const [visualizationSpeed, setVisualizationSpeed] = useState<number>(1);
+  const [visualizationSpeed, setVisualizationSpeed] = useState<number>(10);
   const [iterationStep, setIterationStep] = useState<number>(0);
+  const [pathFindingAlgorithm, setPathFindingAlgorithm] =
+    useState<PathFindingAlgorithms>(PathFindingAlgorithms.Dijkstra);
 
   //Visualization
-
   const calculateNewPath = (): [Position[], Position[][]] => {
+    if (!isVisualizing) return [[], []];
+
     if (!startPosition || !endPosition) return [[], []];
+
     const startNode = cells[startPosition.x]?.[startPosition.y];
     const endNode = cells[endPosition.x]?.[endPosition.y];
+
     if (!startNode || !endNode) return [[], []];
+
+    switch (pathFindingAlgorithm) {
+      case PathFindingAlgorithms.AStar:
+        return aStar(startNode, endNode, cells);
+      case PathFindingAlgorithms.Dijkstra:
+        return dijkstra(startNode, endNode, cells);
+      default:
+        [[], []];
+    }
     return aStar(startNode, endNode, cells);
   };
 
@@ -31,6 +52,8 @@ function App() {
     startPosition,
     endPosition,
     cells,
+    pathFindingAlgorithm,
+    isVisualizing,
   ]);
 
   useEffect(() => {
@@ -151,11 +174,6 @@ function App() {
       setEndPosition(null);
   };
 
-  const refreshPath = () => {
-    visualize();
-    setCells([...cells]);
-  };
-
   const refreshMaze = () => {
     const [maze, start, end] = generateMaze(cells);
     setStartPosition(start);
@@ -174,11 +192,6 @@ function App() {
   };
 
   const visualize = () => {
-    if (explored.length <= 0) {
-      setIsVisualizing(false);
-      return;
-    }
-
     //animate the explored nodes
     if (iterationStep < explored.length) {
       const index = Math.min(iterationStep, explored.length - 1);
@@ -279,7 +292,12 @@ function App() {
         >
           Clear Grid
         </button>
-
+        <button
+          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          onClick={() => refreshMaze()}
+        >
+          Maze
+        </button>
         <label
           htmlFor='grid-size-range'
           className='text-white font-bold py-2 px-4'
@@ -303,7 +321,7 @@ function App() {
           Simulation Speed
         </label>
         <input
-          id='grid-size-range'
+          id='visualization-speed-range'
           type='range'
           min='10'
           max='50'
@@ -314,18 +332,26 @@ function App() {
         />
         <button
           className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => refreshMaze()}
-        >
-          Generate Maze
-        </button>
-        <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
           onClick={() =>
             isVisualizing ? stopVisualization() : startVisualization()
           }
         >
           Visualize
         </button>
+        <Dropdown
+          id={"path-finding-algorithm"}
+          options={Object.values(PathFindingAlgorithms)}
+          defaultSelected={pathFindingAlgorithm}
+          onSelectedChange={(selected) => {
+            const algorithm = Object.values(PathFindingAlgorithms).find(
+              (value) => value === selected
+            );
+            setPathFindingAlgorithm(
+              algorithm || PathFindingAlgorithms.Dijkstra
+            );
+            stopVisualization();
+          }}
+        ></Dropdown>
       </div>
     </div>
   );
