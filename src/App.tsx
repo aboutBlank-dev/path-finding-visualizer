@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import GridCanvas, { GridCell } from "./components/GridCanvas";
 import { aStar } from "./utils/path-finding-algorithms/aStar";
-import { Cell, CellType } from "./utils/cellUtils";
+import { Cell, CellType, Position } from "./utils/cellUtils";
 import { generateMaze } from "./utils/mazeUtils";
 
 export default App;
@@ -16,6 +16,22 @@ function App() {
   const [isVisualizing, setIsVisualizing] = useState<boolean>(false);
   const [visualizationSpeed, setVisualizationSpeed] = useState<number>(1);
   const [iterationStep, setIterationStep] = useState<number>(0);
+
+  //Visualization
+
+  const calculateNewPath = (): [Position[], Position[][]] => {
+    if (!startPosition || !endPosition) return [[], []];
+    const startNode = cells[startPosition.x]?.[startPosition.y];
+    const endNode = cells[endPosition.x]?.[endPosition.y];
+    if (!startNode || !endNode) return [[], []];
+    return aStar(startNode, endNode, cells);
+  };
+
+  const [path, explored] = useMemo(calculateNewPath, [
+    startPosition,
+    endPosition,
+    cells,
+  ]);
 
   useEffect(() => {
     if (!isVisualizing) return;
@@ -158,22 +174,6 @@ function App() {
   };
 
   const visualize = () => {
-    //set all old path nodes to empty
-    for (let x = 0; x < cells.length; x++) {
-      for (let y = 0; y < cells[x].length; y++) {
-        const cell = cells[x][y];
-        if (cell.type === CellType.Path) {
-          cell.type = CellType.Empty;
-        }
-      }
-    }
-
-    if (!startPosition || !endPosition) return;
-    const startNode = cells[startPosition.x]?.[startPosition.y];
-    const endNode = cells[endPosition.x]?.[endPosition.y];
-    if (!startNode || !endNode) return;
-
-    const [path, explored] = aStar(startNode, endNode, cells);
     if (explored.length <= 0) {
       setIsVisualizing(false);
       return;
@@ -305,8 +305,8 @@ function App() {
         <input
           id='grid-size-range'
           type='range'
-          min='25'
-          max='100'
+          min='10'
+          max='50'
           value={visualizationSpeed}
           onChange={(e) => setVisualizationSpeed(Number(e.target.value))}
           step='1'
