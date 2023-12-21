@@ -5,10 +5,14 @@ import { Cell, CellType, Position } from "./utils/cellUtils";
 import { generateMaze } from "./utils/mazeUtils";
 import { dijkstra } from "./utils/path-finding-algorithms/dijkstra";
 import Dropdown from "./components/Dropdown";
+import { dfs } from "./utils/path-finding-algorithms/dfs";
+import { bfs } from "./utils/path-finding-algorithms/bfs";
 
 enum PathFindingAlgorithms {
   AStar = "A*",
   Dijkstra = "Dijkstra",
+  DFS = "Depth First Search",
+  BFS = "Breadth First Search",
 }
 
 export default App;
@@ -42,10 +46,13 @@ function App() {
         return aStar(startNode, endNode, cells);
       case PathFindingAlgorithms.Dijkstra:
         return dijkstra(startNode, endNode, cells);
+      case PathFindingAlgorithms.DFS:
+        return dfs(startNode, endNode, cells);
+      case PathFindingAlgorithms.BFS:
+        return bfs(startNode, endNode, cells);
       default:
-        [[], []];
+        return [[], []];
     }
-    return aStar(startNode, endNode, cells);
   };
 
   const [path, explored] = useMemo(calculateNewPath, [
@@ -259,7 +266,6 @@ function App() {
           onCellClicked={onCellClicked}
           onVisibleGridIndexesChanged={onVisibleGridIndexesChanged}
         ></GridCanvas>
-        ;
       </div>
       <div className='flex flex-row space-x-8 w-full p-4 bg-slate-400'>
         <button
