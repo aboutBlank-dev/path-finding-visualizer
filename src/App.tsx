@@ -165,8 +165,8 @@ function App() {
   };
 
   const onVisibleGridIndexesChanged = (
-    startX: number,
-    startY: number,
+    _startX: number,
+    _startY: number,
     endX: number,
     endY: number
   ) => {
@@ -337,7 +337,11 @@ function App() {
           className='rotate-180 w-16 h-2 my-auto bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700'
         />
         <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          className={`select-none ${
+            isVisualizing
+              ? "bg-red-500 border-red-700 hover:bg-red-400 hover:border-red-500"
+              : "bg-blue-500 border-blue-700 hover:bg-blue-400 hover:border-blue-500"
+          }  text-white font-bold py-2 px-4 border-b-4 rounded`}
           onClick={() =>
             isVisualizing ? stopVisualization() : startVisualization()
           }
