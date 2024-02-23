@@ -1,30 +1,12 @@
-# React + TypeScript + Vite
+## Path Finding Visuazlier
+Path Finding Visualizer made using React(vite) and minimal Tailwind.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+For an extra "challenge" I decided to make it using the HTML Canvas component since all other solutions I have seen tend to opt for a grid component with CSS.
 
-Currently, two official plugins are available:
+## Features
+- Make your own Grid (Place Start, End(Goal) and Obstacle Nodes.
+- Adjust Grid Size and Simulation(Visualization) speed.
+- Choose which path finding algorithm you want to visualize (DFS, BFS, A*, etc)
+- Generate a random maze which uses the [Recursive Backtracking Algorithm](https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_backtracker)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
-
-- Configure the top-level `parserOptions` property like this:
-
-```js
-export default {
-  // other rules...
-  parserOptions: {
-    ecmaVersion: 'latest',
-    sourceType: 'module',
-    project: ['./tsconfig.json', './tsconfig.node.json'],
-    tsconfigRootDir: __dirname,
-  },
-}
-```
-
-- Replace `plugin:@typescript-eslint/recommended` to `plugin:@typescript-eslint/recommended-type-checked` or `plugin:@typescript-eslint/strict-type-checked`
-- Optionally add `plugin:@typescript-eslint/stylistic-type-checked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and add `plugin:react/recommended` & `plugin:react/jsx-runtime` to the `extends` list
+![chrome_egWfRAgdFG](https://github.com/aboutBlank-dev/path-finding-visualizer/assets/48128161/5e8866cd-8a7a-431d-9c7e-349cd2a3b54e)
