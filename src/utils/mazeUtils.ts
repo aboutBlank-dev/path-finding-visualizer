@@ -4,6 +4,14 @@ interface MazeCell extends Cell {
   visited: boolean;
 }
 
+/**
+ * Generates a maze using the recursive backtracking algorithm.
+ * https://en.wikipedia.org/wiki/Maze_generation_algorithm#Recursive_backtracker
+ *
+ * @returns mazeGrid: a 2D array of MazeCells representing the maze
+ * @returns start: the start cell of the maze
+ * @returns end: the end(goal) cell of the maze
+ */
 export function generateMaze(grid: Cell[][]): [Cell[][], Cell, Cell] {
   const mazeGrid: MazeCell[][] = [];
 
@@ -74,7 +82,7 @@ export function generateMaze(grid: Cell[][]): [Cell[][], Cell, Cell] {
   return [mazeGrid, start, end];
 }
 
-// For mazes, we want to get neighbors that are 2 cells away, since the walls are 1 cell thick
+// For mazes, we want to get neighbors that are *2* cells away, since the walls are 1 cell thick
 function getNeighbors(cell: MazeCell, grid: MazeCell[][]): MazeCell[] {
   const neighbors: MazeCell[] = [];
 

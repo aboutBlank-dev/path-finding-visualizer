@@ -55,6 +55,7 @@ function App() {
     }
   };
 
+  //Only recalculate path when the visualization state changes
   const [path, explored] = useMemo(calculateNewPath, [
     startPosition,
     endPosition,
@@ -88,7 +89,7 @@ function App() {
       ctx.fillRect(xPos, yPos, cellSize, cellSize);
     }
 
-    //tell the grid canvas that we handled drawing the cell
+    //tell the grid canvas that WE handled drawing the cell
     return true;
   };
 
@@ -256,6 +257,8 @@ function App() {
     setCells([...cells]);
   };
 
+  const buttonStyle =
+    "select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded";
   return (
     <div className='flex flex-col h-screen w-screen'>
       <div className='grow'>
@@ -269,39 +272,33 @@ function App() {
       </div>
       <div className='flex flex-row space-x-8 w-full p-4 bg-slate-400'>
         <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          className={buttonStyle}
           onClick={() => setCurrentCellType(CellType.StartPosition)}
         >
           Start Node
         </button>
         <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          className={buttonStyle}
           onClick={() => setCurrentCellType(CellType.EndPosition)}
         >
           End Node
         </button>
         <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          className={buttonStyle}
           onClick={() => setCurrentCellType(CellType.Obstacle)}
         >
           Obstacle
         </button>
         <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
+          className={buttonStyle}
           onClick={() => setCurrentCellType(CellType.Empty)}
         >
           Empty
         </button>
-        <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => clearGrid()}
-        >
+        <button className={buttonStyle} onClick={() => clearGrid()}>
           Clear Grid
         </button>
-        <button
-          className='select-none bg-blue-500 hover:bg-blue-400 text-white font-bold py-2 px-4 border-b-4 border-blue-700 hover:border-blue-500 rounded'
-          onClick={() => refreshMaze()}
-        >
+        <button className={buttonStyle} onClick={() => refreshMaze()}>
           Maze
         </button>
         <label

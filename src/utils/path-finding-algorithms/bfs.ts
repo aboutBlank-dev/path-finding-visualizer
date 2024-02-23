@@ -8,18 +8,30 @@ class BFSNode {
   ) {}
 }
 
+/**
+ * Breadth-First-Search pathfinding algorithm
+ * https://en.wikipedia.org/wiki/Breadth-first_search
+ *
+ * @param start - start position
+ * @param end - end(goal) position
+ * @param grid - grid to search
+ *
+ * @returns [path, explored]
+ * * path: the path from start to end
+ * * explored: cells that were explored at EACH ITERATION. This is used to visualize the algorithm
+ */
 export function bfs(
   start: Position,
   end: Position,
-  cells: Cell[][]
+  grid: Cell[][]
 ): [Position[], Position[][]] {
   const q: BFSNode[] = [];
   const nodes: BFSNode[][] = [];
   const totalVisited: Position[][] = [];
 
-  for (let x = 0; x < cells.length; x++) {
+  for (let x = 0; x < grid.length; x++) {
     nodes.push([]);
-    for (let y = 0; y < cells[x].length; y++) {
+    for (let y = 0; y < grid[x].length; y++) {
       nodes[x].push(new BFSNode({ x, y }));
     }
   }
@@ -42,9 +54,9 @@ export function bfs(
     current.visited = true;
     visited.push(current.position);
 
-    const neighbors = getNeighbors(current.position, cells);
+    const neighbors = getNeighbors(current.position, grid);
     for (const neighbor of neighbors) {
-      if (cells[neighbor.x][neighbor.y].type === CellType.Obstacle) continue;
+      if (grid[neighbor.x][neighbor.y].type === CellType.Obstacle) continue;
 
       const neighborNode = nodes[neighbor.x][neighbor.y];
       if (neighborNode.visited) continue;

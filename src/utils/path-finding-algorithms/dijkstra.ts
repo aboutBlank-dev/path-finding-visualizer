@@ -16,21 +16,33 @@ class DijkstraNode {
   ) {}
 }
 
+/**
+ * Dijkstra's pathfinding algorithm
+ * https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm
+ *
+ * @param start - start position
+ * @param end - end(goal) position
+ * @param grid - grid to search
+ *
+ * @returns [path, explored]
+ * * path: the path from start to end
+ * * explored: cells that were explored at EACH ITERATION. This is used to visualize the algorithm
+ */
 export function dijkstra(
   start: Cell,
   end: Cell,
-  cells: Cell[][]
+  grid: Cell[][]
 ): [Position[], Position[][]] {
   const startNode: DijkstraNode = new DijkstraNode(start.x, start.y, 0);
   const queue: DijkstraNode[] = [];
   const totalVisited: Position[][] = [];
 
-  for (let x = 0; x < cells.length; x++) {
-    for (let y = 0; y < cells[x].length; y++) {
+  for (let x = 0; x < grid.length; x++) {
+    for (let y = 0; y < grid[x].length; y++) {
       if (x === start.x && y === start.y) {
         queue.push(startNode);
       }
-      const isWall = cells[x][y].type === CellType.Obstacle;
+      const isWall = grid[x][y].type === CellType.Obstacle;
       queue.push(new DijkstraNode(x, y, Infinity, undefined, isWall));
     }
   }
@@ -49,9 +61,9 @@ export function dijkstra(
     if (u.x === end.x && u.y === end.y) {
       const path: Cell[] = [];
       let temp = { x: u.x, y: u.y, parent: u.parent };
-      path.push(cells[temp.x][temp.y]);
+      path.push(grid[temp.x][temp.y]);
       while (temp.parent) {
-        path.push(cells[temp.parent.x][temp.parent.y]);
+        path.push(grid[temp.parent.x][temp.parent.y]);
         temp = temp.parent;
       }
       return [path.reverse(), totalVisited];
@@ -59,7 +71,7 @@ export function dijkstra(
 
     queue.splice(lowstDistanceIndex, 1);
 
-    const neighbors = getNeighbors(u, cells);
+    const neighbors = getNeighbors(u, grid);
     for (const neighbor of neighbors) {
       const alt = u.distance + getDistance(u, neighbor);
       const v = queue.find(

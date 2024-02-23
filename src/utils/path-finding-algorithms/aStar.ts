@@ -17,6 +17,18 @@ class AStarNode {
   ) {}
 }
 
+/**
+ * A* pathfinding algorithm
+ * https://en.wikipedia.org/wiki/A*_search_algorithm
+ *
+ * @param start - start position
+ * @param end - end(goal) position
+ * @param grid - grid to search
+ *
+ * @returns [path, explored]
+ * * path: the path from start to end
+ * * explored: cells that were explored at EACH ITERATION. This is used to visualize the algorithm
+ */
 export function aStar(
   start: Position,
   end: Position,
@@ -98,5 +110,6 @@ export function aStar(
     explored.push([...closedSet]);
   }
 
+  // no solution
   return [[], explored];
 }
